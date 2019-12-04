@@ -165,9 +165,6 @@ public class JnlpProtocolHandlerFactory {
         if (ioHub != null && context != null) {
             result.add(new JnlpProtocol4Handler(clientDatabase, threadPool, ioHub, context, needClientAuth, preferNio));
         }
-        if (ioHub != null) {
-            result.add(new JnlpProtocol4PlainHandler(clientDatabase, threadPool, ioHub, preferNio));
-        }
         return result;
     }
 }
