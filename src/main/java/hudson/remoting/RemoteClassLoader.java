@@ -538,7 +538,7 @@ final class RemoteClassLoader extends URLClassLoader {
                 } catch (IOException | InterruptedException | ExecutionException e) {
                     throw new Error("Unable to load resource " + name, e);
                 } catch (RemotingSystemException x) {
-                    if (x.getCause() instanceof InterruptedException) {
+                    if (x.getCause() instanceof InterruptedException && isClassInit(x)) {
                         // pretend as if this operation is not interruptible.
                         // but we need to remember to set the interrupt flag back on
                         // before we leave this call.
@@ -563,6 +563,15 @@ final class RemoteClassLoader extends URLClassLoader {
             }
         }
         throw new RuntimeException("Could not load resource " + name + " after " + MAX_RETRIES + " tries.");
+    }
+
+    private boolean isClassInit(RemotingSystemException x) {
+        for (StackTraceElement element : x.getStackTrace()) {
+            if (element.getMethodName().equals("<clinit>")) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private void invokeResourceLoadTestingHookIfNeeded() {
@@ -637,7 +646,7 @@ final class RemoteClassLoader extends URLClassLoader {
                     }
                     return resURLs.elements();
                 } catch (RemotingSystemException x) {
-                    if (x.getCause() instanceof InterruptedException) {
+                    if (x.getCause() instanceof InterruptedException && isClassInit(x)) {
                         // pretend as if this operation is not interruptible.
                         // but we need to remember to set the interrupt flag back on
                         // before we leave this call.

@@ -219,7 +219,7 @@ public class ClassRemoting2Test extends RmiTestBase {
     }
 
     @Issue("JENKINS-61103")
-    public void testSingleInterruptionOfFindResources() throws Exception {
+    public void testSingleInterruptionOfClassInitializationWithFindResources() throws Exception {
         final DummyClassLoader dcl = new DummyClassLoader(TestStaticGetResources.class);
         final Callable<Object, Exception> callable = (Callable<Object, Exception>) dcl.load(TestStaticGetResources.class);
         // make sure we get a remote interruption exception on "findResources" call
@@ -232,7 +232,7 @@ public class ClassRemoting2Test extends RmiTestBase {
     }
 
     @Issue("JENKINS-61103")
-    public void testMultipleInterruptionOfFindResources() throws Exception {
+    public void testMultipleInterruptionOfClassInitializationWithFindResources() throws Exception {
         final DummyClassLoader dcl = new DummyClassLoader(TestStaticGetResources.class);
         final Callable<Object, Exception> callable = (Callable<Object, Exception>) dcl.load(TestStaticGetResources.class);
         // make sure we get a remote interruption exception on "getResource" call
@@ -247,7 +247,7 @@ public class ClassRemoting2Test extends RmiTestBase {
     }
 
     @Issue("JENKINS-61103")
-    public void testContinuedInterruptionOfFindResources() throws Exception {
+    public void testContinuedInterruptionOfClassInitializationWithFindResources() throws Exception {
         final DummyClassLoader dcl = new DummyClassLoader(TestStaticGetResources.class);
         final Callable<Object, Exception> callable = (Callable<Object, Exception>) dcl.load(TestStaticGetResources.class);
         // make sure we get a remote interruption exception on "getResource" call
@@ -261,6 +261,38 @@ public class ClassRemoting2Test extends RmiTestBase {
             fail("Should have timed out, exceeding the max retries.");
         } catch (ExecutionException ex) {
             // Expected when we exceed the retries.
+        }
+    }
+
+    @Issue("JENKINS-61103")
+    public void testSingleInterruptionOfResourceReference() throws Exception {
+        final DummyClassLoader dcl = new DummyClassLoader(TestResourceReference.class);
+        final Callable<Object, Exception> callable = (Callable<Object, Exception>) dcl.load(TestResourceReference.class);
+        // make sure we get a remote interruption exception on "getResource" call
+        RemoteClassLoader.TESTING_RESOURCE_LOAD = new InterruptInvocation(1, 1);
+        Future<Object> f1 = ClassRemotingTest.scheduleCallableLoad(channel, callable);
+
+        try {
+            f1.get();
+            fail("Should not retry when not loading class.");
+        } catch (ExecutionException ex) {
+            // Expected when we exceed the retries.
+        }
+    }
+
+    @Issue("JENKINS-61103")
+    public void testSingleInterruptionOfFindResources() throws Exception {
+        final DummyClassLoader dcl = new DummyClassLoader(TestGetResources.class);
+        final Callable<Object, Exception> callable = (Callable<Object, Exception>) dcl.load(TestGetResources.class);
+        // make sure we get a remote interruption exception on "getResource" call
+        RemoteClassLoader.TESTING_RESOURCE_LOAD = new InterruptInvocation(1, 1);
+        Future<Object> f1 = ClassRemotingTest.scheduleCallableLoad(channel, callable);
+
+        try {
+            Object o = f1.get();
+            fail("Should not retry when not loading class.");
+        } catch (ExecutionException ex) {
+            int a = 0;
         }
     }
 
